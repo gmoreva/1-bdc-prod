@@ -1,0 +1,75 @@
+version: "3"
+services:
+  postgres:
+    image: postgres:11
+    networks:
+      - back
+    restart: always
+    expose:
+      - 5432
+    environment:
+      POSTGRES_DB: main
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./docker/initpg.sh:/docker-entrypoint-initdb.d/initpg.sh
+
+  service1:
+    build:
+      context: ${SERVICE_1_SRC_DIR}
+      dockerfile: Dockerfile
+    expose:
+      - 3001
+    environment:
+      - PG_STRING=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/service1
+      - OTHER_SERVICE=http://service2:3001
+      - VIRTUAL_HOST=${SERVICE_DOMAIN}
+      - LETSENCRYPT_HOST=${SERVICE_DOMAIN}
+      - VIRTUAL_PORT=3001
+      - PORT=3001
+    networks:
+      - back
+      - reverse-proxy
+
+  service2:
+    build:
+      context: ${SERVICE_2_SRC_DIR}
+      dockerfile: Dockerfile
+    expose:
+      - 3001
+    environment:
+      - PG_STRING=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/service2
+      - OTHER_SERVICE=http://service1:3001
+      - PORT=3001
+    networks:
+      - back
+      - reverse-proxy
+
+
+  interface:
+    build:
+      context: ${INTERFACE_SRC_DIR}
+      dockerfile: Dockerfile
+      args:
+        - SERVICE_URL=${PROTOCOL}://${SERVICE_DOMAIN}
+    expose:
+      - 3000
+    environment:
+      - VIRTUAL_HOST=${INTERFACE_DOMAIN}
+      - LETSENCRYPT_HOST=${INTERFACE_DOMAIN}
+      - VIRTUAL_PORT=3000
+      - PORT=3000
+      - SERVICE_URL=${PROTOCOL}://${SERVICE_DOMAIN}
+      - HOST=0.0.0.0
+    networks:
+      - reverse-proxy
+networks:
+  reverse-proxy:
+    external:
+      name: reverse-proxy
+  back:
+    driver: bridge
+
+volumes:
+  postgres:
