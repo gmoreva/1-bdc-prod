@@ -40,11 +40,9 @@ services:
       - 3001
     environment:
       - PG_STRING=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/service2
-      - OTHER_SERVICE=http://service1:3001
       - PORT=3001
     networks:
       - back
-      - reverse-proxy
 
 
   interface:
@@ -64,6 +62,7 @@ services:
       - HOST=0.0.0.0
     networks:
       - reverse-proxy
+
 networks:
   reverse-proxy:
     external:
