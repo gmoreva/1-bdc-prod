@@ -17,7 +17,7 @@ sudo docker network create --driver bridge reverse-proxy
 sudo docker run -d -p 80:80 -p 443:443 \
  --name nginx-proxy     --network reverse-proxy \
  --restart=always     -v $HOME/certs:/etc/nginx/certs:ro \
- -v /etc/nginx/vhost.d     -v /usr/share/nginxna/html     \
+ -v /etc/nginx/vhost.d     -v /usr/share/nginx/html     \
  -v /var/run/docker.sock:/tmp/docker.sock:ro \
      --label com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true \
 jwilder/nginx-proxy
